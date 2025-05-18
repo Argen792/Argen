@@ -1,0 +1,13 @@
+{% extends "hostel_app/base.html" %}
+
+{% block title %}Удалить Комнату{% endblock %}
+
+{% block content %}
+    <h2>Удалить Комнату</h2>
+    <p>Вы уверены, что хотите удалить комнату <strong>"{{ object.number }} ({{ object.get_room_type_display }})"</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, удалить</button>
+        <a href="{% url 'room_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

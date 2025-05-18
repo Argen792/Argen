@@ -1,0 +1,14 @@
+{% extends "hostel_app/base.html" %}
+{# Удалена строка: {% load crispy_forms_tags %} #}
+
+{% block title %}{{ form_title|default:"Форма Комнаты" }}{% endblock %}
+
+{% block content %}
+    <h2>{{ form_title|default:"Форма Комнаты" }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Сохранить</button>
+        <a href="{% url 'room_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "hostel_app/base.html" %}
+
+{% block title %}{{ form_title|default:"Обновить Занятость" }}{% endblock %}
+
+{% block content %}
+    <h2>{{ form_title }}</h2>
+    <p>Комната: <strong>{{ room.number }} ({{ room.get_room_type_display }})</strong></p>
+    <p>Всего кроватей: {{ room.beds_total }}</p>
+    <hr>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="{% url 'room_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

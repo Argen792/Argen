@@ -1,0 +1,149 @@
+{% extends "hostel_app/base.html" %}
+{% load get_item %}
+{% load static %}
+
+{% block title %}Календарь Занятости{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Календарь Занятости</h1>
+</div>
+
+{# --- ФОРМА ФИЛЬТРОВ --- #}
+<form method="get" class="row g-3 align-items-center mb-4 p-3 border rounded bg-light">
+    <div class="col-md-4">
+        <label for="room_type_filter" class="form-label form-label-sm">Тип комнаты:</label>
+        <select name="room_type" id="room_type_filter" class="form-select form-select-sm">
+            <option value="">Все типы</option>
+            {% for value, display in room_types %}
+            <option value="{{ value }}" {% if value == current_room_type_filter %}selected{% endif %}>{{ display }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-5">
+        <label for="availability_filter" class="form-label form-label-sm">Показать:</label>
+        <select name="availability_filter" id="availability_filter" class="form-select form-select-sm">
+            <option value="all" {% if current_availability_filter == 'all' %}selected{% endif %}>Все комнаты (календарь)</option>
+            <option value="free_today" {% if current_availability_filter == 'free_today' %}selected{% endif %}>Свободные сегодня</option>
+            <option value="soon_to_be_free" {% if current_availability_filter == 'soon_to_be_free' %}selected{% endif %}>Освободятся скоро</option>
+        </select>
+    </div>
+
+    {# Эти скрытые поля нужны только если мы показываем календарь (availability_filter == 'all') #}
+    {% if current_availability_filter == 'all' or not current_availability_filter %}
+    <input type="hidden" name="year" value="{{ current_month_display|date:'Y' }}">
+    <input type="hidden" name="month" value="{{ current_month_display|date:'n' }}">
+    {% endif %}
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Применить фильтры</button>
+    </div>
+</form>
+{# --- КОНЕЦ ФОРМЫ ФИЛЬТРОВ --- #}
+
+
+{# --- Отображение списка свободных сегодня комнат --- #}
+{% if current_availability_filter == 'free_today' %}
+    <h3 class="mt-4">Комнаты, свободные сегодня ({{ today_iso|date:"d.m.Y" }})</h3>
+    {% if free_rooms_today_list %}
+        <ul class="list-group">
+            {% for room in free_rooms_today_list %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><strong>{{ room.number }}</strong> ({{ room.get_room_type_display }}) - Всего кроватей: {{ room.beds_total }}</span>
+                <a href="{% url 'room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-success">Забронировать</a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Нет комнат, свободных сегодня, по выбранным фильтрам.</p>
+    {% endif %}
+{% endif %}
+
+{# --- Отображение списка комнат, которые скоро освободятся --- #}
+{% if current_availability_filter == 'soon_to_be_free' %}
+    <h3 class="mt-4">Комнаты, которые скоро освободятся (отсортировано по дате выезда)</h3>
+    {% if rooms_by_checkout_date_list %}
+        <ul class="list-group">
+            {% for room in rooms_by_checkout_date_list %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    <strong>{{ room.number }}</strong> ({{ room.get_room_type_display }}) -
+                    Освободится: <strong>{{ room.calculated_checkout_date|date:"d.m.Y" }}</strong>
+                    (Занято: {{ room.beds_taken }}/{{ room.beds_total }},
+                    {% if room.is_paid %}Оплачено{% else %}Не оплачено{% endif %})
+                </span>
+                <a href="{% url 'room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-primary">Детали</a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Нет занятых комнат с предстоящей датой выезда по выбранным фильтрам.</p>
+    {% endif %}
+{% endif %}
+
+
+{# --- Отображение сетки календаря (только если выбран фильтр "Все комнаты" или фильтр не выбран) --- #}
+{% if current_availability_filter == 'all' or not current_availability_filter %}
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <a href="?year={{ prev_year }}&month={{ prev_month }}{% if current_room_type_filter %}&room_type={{ current_room_type_filter }}{% endif %}&availability_filter={{ current_availability_filter|default:'all' }}" class="btn btn-outline-secondary btn-sm">&laquo; Пред. месяц</a>
+        <h4>{{ current_month_display }}</h4>
+        <a href="?year={{ next_year }}&month={{ next_month }}{% if current_room_type_filter %}&room_type={{ current_room_type_filter }}{% endif %}&availability_filter={{ current_availability_filter|default:'all' }}" class="btn btn-outline-secondary btn-sm">След. месяц &raquo;</a>
+    </div>
+
+    {% if rooms_for_calendar_grid %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-calendar">
+            <thead>
+                <tr>
+                    <th class="sticky-col">Комната</th>
+                    {% for day in days_in_month %}
+                    <th class="calendar-day {% if day.isoformat == today_iso %}today{% endif %}">
+                        {{ day.day }}<br><small>{{ day|date:"D" }}</small>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms_for_calendar_grid %}
+                <tr>
+                    <td class="sticky-col">
+                        <strong>{{ room.number }}</strong><br>
+                        <small>{{ room.get_room_type_display }}</small>
+                    </td>
+                    {% for day_date in days_in_month %}
+                        {% with day_status=calendar_data|get_item:room.id|get_item:day_date.isoformat %}
+                        <td class="calendar-day
+                            {% if day_status.status == 'occupied' %}
+                                {% if day_status.is_paid %}occupied-paid{% else %}occupied-unpaid{% endif %}
+                            {% elif day_status.status == 'checkout' %}
+                                checkout
+                            {% endif %}
+                            {% if day_date.isoformat == today_iso %}today{% endif %}"
+                            title="{% if day_status %}{{ room.number }} - {{ day_date|date:'d.m.Y' }} - {% if day_status.status == 'checkout' %}Выезд{% else %}{% if day_status.is_paid %}Оплачено{% else %}Не оплачено{% endif %}{% endif %}{% else %}{{ room.number }} - {{ day_date|date:'d.m.Y' }} - Свободно{% endif %}">
+
+                            {% if day_status.status == 'checkout' %}
+                                <i class="fas fa-door-open" title="Выезд: {{ day_status.check_out_date_str|date:'d.m.Y' }}"></i>
+                            {% elif day_status.status == 'occupied' %}
+                                <i class="fas fa-bed" title="Занято. Выезд: {{ day_status.check_out_date_str|date:'d.m.Y' }}"></i>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    {# Это сообщение теперь должно появляться, только если фильтр "Все комнаты" активен и комнат нет #}
+    <p class="text-muted">Нет комнат для отображения в календаре по выбранным фильтрам типа комнаты.</p>
+    {% endif %}
+{% endif %} {# Конец блока отображения календаря #}
+
+{% endblock %} {# Этот закрывает block content #}
+
+{% block extra_js %}
+<script>
+// Скрипты здесь, если понадобятся
+</script>
+{% endblock %}
