@@ -1,6 +1,6 @@
-# hostel_app/urls.py
+# hostel_app/urls.py (для веб-интерфейса)
 from django.urls import path
-from .views import ( # <--- Убедитесь, что этот импорт правильный
+from .views import (
     RoomListView,
     RoomCreateView,
     RoomUpdateView,
@@ -8,6 +8,8 @@ from .views import ( # <--- Убедитесь, что этот импорт п�
     RoomOccupancyUpdateView,
     CalendarView
 )
+
+app_name = 'hostel_web' # <--- ДОБАВЛЕНО/ПРОВЕРЕНО
 
 urlpatterns = [
     path('', RoomListView.as_view(), name='room_list'),

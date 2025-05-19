@@ -37,10 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'hostel_app',
+    'hostel_app',               # Ваше приложение
+    'rest_framework',           # Django REST framework
+    'rest_framework.authtoken', # Для токен-аутентификации
+    'corsheaders',              # Для CORS
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # ПРАВИЛЬНО, стоит высоко в списке
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,7 +54,37 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Эта настройка для CORS_ALLOWED_ORIGINS идеальна для разработки.
+# Для продакшена замените ее на конкретные домены вашего фронтенда.
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Если ваш React/Vue/Angular dev server здесь
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",  # Пример для Vite (Vue, React, Svelte)
+    "http://127.0.0.1:5173",
+    # Добавьте сюда порт вашего Flutter Web dev server, если будете его использовать
+    # (например, "http://localhost:ПОРТ_FLUTTER_WEB")
+]
+# Альтернативно, для разработки можно использовать (менее безопасно для продакшена):
+# CORS_ALLOW_ALL_ORIGINS = True
+
 ROOT_URLCONF = 'hostel_project.urls'
+
+# ... (TEMPLATES, DATABASES, AUTH_PASSWORD_VALIDATORS, и т.д. - они выглядят стандартно и правильно) ...
+
+# --- ДОБАВЬТЕ ЭТУ СЕКЦИЮ ДЛЯ НАСТРОЕК DJANGO REST FRAMEWORK ---
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication', # Оставьте, если хотите использовать Browsable API с логином Django
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        # По умолчанию сделаем API доступным только для аутентифицированных пользователей.
+        # Если какие-то эндпоинты должны быть публичными, вы можете переопределить
+        # permission_classes на уровне конкретного ViewSet или APIView.
+        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.AllowAny', # Использовать с осторожностью
+    ]
+}
 
 TEMPLATES = [
     {
