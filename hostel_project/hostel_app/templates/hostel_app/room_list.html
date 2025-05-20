@@ -1,20 +1,21 @@
 {% extends "hostel_app/base.html" %}
-{% load static %}
+{% load static %} {# Оставляем, если есть статика, специфичная для этого шаблона #}
 
 {% block title %}Список Комнат{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Список Комнат</h1>
-    <a href="{% url 'room_create' %}" class="btn btn-success"><i class="fas fa-plus"></i> Добавить комнату</a>
+    <a href="{% url 'hostel_web:room_create' %}" class="btn btn-success"><i class="fas fa-plus"></i> Добавить комнату</a>
 </div>
 
-<p>Отладочное сообщение: Переменная 'rooms' в шаблоне: {{ rooms }}</p>
-<p>Отладочное сообщение: Количество комнат: {{ rooms|length }}</p>
+{# Отладочные сообщения можно убрать, если они больше не нужны #}
+{# <p>Отладочное сообщение: Переменная 'rooms' в шаблоне: {{ rooms }}</p> #}
+{# <p>Отладочное сообщение: Количество комнат: {{ rooms|length }}</p> #}
 
 <div class="row">
     {% if rooms %}
-        <p>Отладочное сообщение: Блок 'if rooms' выполнен.</p>
+        {# <p>Отладочное сообщение: Блок 'if rooms' выполнен.</p> #}
         {% for room in rooms %}
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card room-card h-100
@@ -41,18 +42,18 @@
 
                     <div class="mt-auto pt-2">
                         <hr class="my-2">
-                        <a href="{% url 'room_occupancy_update' room.pk %}" class="btn btn-primary btn-sm me-1">Изменить занятость</a>
-                        <a href="{% url 'room_update' room.pk %}" class="btn btn-secondary btn-sm me-1">Редакт. комнату</a>
-                        <a href="{% url 'room_delete' room.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                        <a href="{% url 'hostel_web:room_occupancy_update' room.pk %}" class="btn btn-primary btn-sm me-1">Изменить занятость</a>
+                        <a href="{% url 'hostel_web:room_update' room.pk %}" class="btn btn-secondary btn-sm me-1">Редакт. комнату</a>
+                        <a href="{% url 'hostel_web:room_delete' room.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     {% else %}
-         <p>Отладочное сообщение: Блок 'else' для 'if rooms' выполнен (комнат нет или переменная rooms пуста).</p>
+         {# <p>Отладочное сообщение: Блок 'else' для 'if rooms' выполнен (комнат нет или переменная rooms пуста).</p> #}
         <div class="col">
-            <p class="text-muted">Комнат пока нет. <a href="{% url 'room_create' %}">Добавьте первую комнату</a>.</p>
+            <p class="text-muted">Комнат пока нет. <a href="{% url 'hostel_web:room_create' %}">Добавьте первую комнату</a>.</p>
         </div>
     {% endif %}
 </div>

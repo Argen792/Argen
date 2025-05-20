@@ -29,7 +29,6 @@
         </select>
     </div>
 
-    {# Эти скрытые поля нужны только если мы показываем календарь (availability_filter == 'all') #}
     {% if current_availability_filter == 'all' or not current_availability_filter %}
     <input type="hidden" name="year" value="{{ current_month_display|date:'Y' }}">
     <input type="hidden" name="month" value="{{ current_month_display|date:'n' }}">
@@ -50,7 +49,7 @@
             {% for room in free_rooms_today_list %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span><strong>{{ room.number }}</strong> ({{ room.get_room_type_display }}) - Всего кроватей: {{ room.beds_total }}</span>
-                <a href="{% url 'room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-success">Забронировать</a>
+                <a href="{% url 'hostel_web:room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-success">Забронировать</a>
             </li>
             {% endfor %}
         </ul>
@@ -72,7 +71,7 @@
                     (Занято: {{ room.beds_taken }}/{{ room.beds_total }},
                     {% if room.is_paid %}Оплачено{% else %}Не оплачено{% endif %})
                 </span>
-                <a href="{% url 'room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-primary">Детали</a>
+                <a href="{% url 'hostel_web:room_occupancy_update' room.pk %}" class="btn btn-sm btn-outline-primary">Детали</a>
             </li>
             {% endfor %}
         </ul>
@@ -135,12 +134,11 @@
         </table>
     </div>
     {% else %}
-    {# Это сообщение теперь должно появляться, только если фильтр "Все комнаты" активен и комнат нет #}
     <p class="text-muted">Нет комнат для отображения в календаре по выбранным фильтрам типа комнаты.</p>
     {% endif %}
-{% endif %} {# Конец блока отображения календаря #}
+{% endif %}
 
-{% endblock %} {# Этот закрывает block content #}
+{% endblock %}
 
 {% block extra_js %}
 <script>
