@@ -1,5 +1,5 @@
 # hostel_app/api_views.py
-from rest_framework import viewsets, status  # Убедитесь, что status импортирован
+from rest_framework import viewsets, status, permissions  # Убедитесь, что status импортирован
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -14,6 +14,7 @@ from .serializers import RoomSerializer, RoomOccupancySerializer  # Импорт
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all().order_by('number')
     serializer_class = RoomSerializer  # Основной сериализатор для стандартных действий ViewSet
+    permission_classes = [permissions.AllowAny] # Add this for testing
 
     # permission_classes = [permissions.IsAuthenticated] # Раскомментируйте для включения защиты API
 
