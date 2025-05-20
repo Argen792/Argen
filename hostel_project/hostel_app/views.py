@@ -12,7 +12,7 @@ from django.db.models import Q, F, ExpressionWrapper, fields, Value
 from django.db.models.functions import Coalesce
 
 # --- Классы CRUD для Комнат ---
-# hostel_app/views.py
+# hostel_app/views.pyDD
 # ... (другие импорты) ...
 
 class RoomListView(ListView):
