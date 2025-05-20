@@ -1,6 +1,5 @@
 // src/types/index.ts
-
-export interface AuthToken { // <--- ЭКСПОРТ И ПРАВИЛЬНОЕ ИМЯ
+export interface AuthToken {
   token: string;
 }
 
@@ -29,7 +28,13 @@ export interface OccupancyData {
 }
 
 export interface NewRoomData {
-    number: string;
-    room_type: 'lux' | 'simple';
-    beds_total: number;
+  number: string;
+  room_type: 'lux' | 'simple';
+  beds_total: number;
+}
+
+// Добавьте этот интерфейс, если он используется в apiService.ts или AuthContext.tsx
+export interface ApiError {
+  error: any; // Может быть строкой или объектом с деталями
+  status: number | null;
 }

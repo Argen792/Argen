@@ -2,22 +2,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import './index.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter } from 'react-router-dom'; // <--- РАСКОММЕНТИРОВАНО
-// import { AuthProvider } from './context/AuthContext.tsx'; // ПОКА ОСТАВИТЬ ЗАКОММЕНТИРОВАННЫМ
+import './index.css'; // Your global styles
+import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap CSS
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.tsx';
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <BrowserRouter> {/* <--- РАСКОММЕНТИРОВАНО, ОТКРЫВАЮЩИЙ ТЕГ */}
-        {/* <AuthProvider> */}
+      <BrowserRouter>
+        <AuthProvider>
           <App />
-        {/* </AuthProvider> */}
-      </BrowserRouter> {/* <--- РАСКОММЕНТИРОВАНО, ЗАКРЫВАЮЩИЙ ТЕГ БЕЗ ЛИШНИХ СИМВОЛОВ */}
+        </AuthProvider>
+      </BrowserRouter>
     </React.StrictMode>,
   );
 } else {
-  console.error("ОШИБКА: Корневой элемент 'root' не найден в index.html!");
+  console.error("Root element not found in index.html");
 }

@@ -1,55 +1,77 @@
 // src/services/apiService.ts
-// src/services/apiService.ts
-import axios from 'axios'; // Импортируем axios как экспорт по умолчанию
-import type { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios'; // Импортируем типы отдельно с ключевым словом 'type'
-// ... остальной ваш код apiService.ts ...
-// ... другие импорты (AuthToken, Room и т.д.)
+import { AuthToken, Room, ApiError as CustomApiErrorType } from '../types'; // Убедитесь, что ApiError импортирован из ваших типов
 
-// Получаем базовый URL API из переменных окружения .env
-const API_DOMAIN = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'; // Значение по умолчанию на случай, если VITE_API_BASE_URL не определена
+const API_BASE_URL = 'http://127.0.0.1:8000'; // Или import.meta.env.VITE_API_BASE_URL
 
-// Клиент для эндпоинтов, которые находятся под /api/v1/
-const apiClientV1: AxiosInstance = axios.create({
-  baseURL: `${API_DOMAIN}/api/v1`, // Например, http://127.0.0.1:8000/api/v1
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Перехватчик для добавления токена (если нужно)
-apiClientV1.interceptors.request.use((config) => {
+// Вспомогательная функция для выполнения запросов с токеном
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = localStorage.getItem('authToken');
+  const headers = new Headers(options.headers || {});
+
   if (token) {
-    config.headers.Authorization = `Token ${token}`;
+    headers.append('Authorization', `Token ${token}`);
   }
-  return config;
-});
+  headers.append('Content-Type', 'application/json'); // Обычно нужен для POST/PUT
 
-// Функция для логина (использует API_DOMAIN напрямую)
-export const loginUser = async (username_param: string, password_param: string) => {
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+}
+
+// Функция для входа пользователя
+export async function loginUser(username_param: string, password_param: string): Promise<AuthToken | CustomApiErrorType> {
   try {
-    const formData = new FormData();
-    formData.append('username', username_param);
-    formData.append('password', password_param);
-    const response = await axios.post<AuthToken>(`${API_DOMAIN}/api/get-token/`, formData);
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
+    const response = await fetch(`${API_BASE_URL}/api/get-token/`, { // URL для получения токена
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username: username_param, password: password_param }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Django REST framework's authtoken.views.obtain_auth_token возвращает non_field_errors
+      // или detail при ошибках.
+      const errorDetail = data.non_field_errors ? { non_field_errors: data.non_field_errors } : (data.detail ? { detail: data.detail } : data);
+      return { error: errorDetail, status: response.status };
     }
-    return response.data;
+    return data as AuthToken; // Ожидаем { token: "your_token_string" }
   } catch (error: any) {
-    // ... обработка ошибок ...
-    return { error: error.response?.data || 'Login failed' };
+    console.error('Login API error:', error);
+    return { error: error.message || 'Network error during login', status: null };
   }
-};
+}
 
-// Функции для работы с комнатами (используют apiClientV1)
-export const fetchRooms = async () => {
+// Функция для выхода (в основном, это очистка токена на клиенте)
+export function logoutUser(): void {
+  localStorage.removeItem('authToken');
+  // Дополнительно: можно было бы сделать запрос к API для инвалидации токена на сервере,
+  // но стандартный djangorestframework.authtoken этого не предоставляет "из коробки".
+}
+
+// Функция для получения списка комнат
+export async function fetchRooms(): Promise<Room[] | CustomApiErrorType> {
   try {
-    const response = await apiClientV1.get<Room[]>('/rooms/'); // Путь относительно baseURL apiClientV1
-    return response.data;
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/v1/rooms/`); // Защищенный эндпоинт
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Django REST framework часто возвращает 'detail' для ошибок авторизации/доступа
+      const errorDetail = data.detail ? { detail: data.detail } : data;
+      return { error: errorDetail, status: response.status };
+    }
+    return data as Room[];
   } catch (error: any) {
-    // ... обработка ошибок ...
-    return { error: error.response?.data || 'Failed to fetch rooms' };
+    console.error('Fetch rooms API error:', error);
+    return { error: error.message || 'Network error while fetching rooms', status: null };
   }
-};
-// ... остальные функции API ...
+}
+
+// Можно добавить и другие функции API здесь, например:
+// export async function fetchRoomById(id: number): Promise<Room | CustomApiErrorType> { ... }
+// export async function createRoom(data: NewRoomData): Promise<Room | CustomApiErrorType> { ... }
+// export async function updateRoomOccupancy(id: number, data: OccupancyData): Promise<Room | CustomApiErrorType> { ... }
